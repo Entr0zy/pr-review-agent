@@ -4,6 +4,9 @@ Examples:
     # offline demo, no API key needed:
     git diff | python -m pr_review_agent.cli --mock
 
+    # review a live GitHub PR (uses GITHUB_TOKEN if set):
+    python -m pr_review_agent.cli --github-pr https://github.com/owner/repo/pull/1 --mock
+
     # real review with Gemini (needs GEMINI_API_KEY and the [gemini] extra):
     git diff main...HEAD | python -m pr_review_agent.cli
 """
@@ -18,12 +21,20 @@ from .reviewer import PRReviewer
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Review a unified diff for bugs and risks.")
     parser.add_argument("diff", nargs="?", help="Path to a diff file. Reads stdin if omitted.")
+    parser.add_argument("--github-pr", metavar="URL",
+                        help="Fetch and review a GitHub PR by URL (uses GITHUB_TOKEN if set).")
     parser.add_argument("--mock", action="store_true",
                         help="Use the offline heuristic reviewer (no API key).")
     parser.add_argument("--model", default="gemini-2.5-pro", help="Gemini model id.")
     args = parser.parse_args(argv)
 
-    diff_text = open(args.diff, encoding="utf-8").read() if args.diff else sys.stdin.read()
+    if args.github_pr:
+        from .sources.github import fetch_pr_diff_from_url
+        diff_text = fetch_pr_diff_from_url(args.github_pr)
+    elif args.diff:
+        diff_text = open(args.diff, encoding="utf-8").read()
+    else:
+        diff_text = sys.stdin.read()
 
     if args.mock:
         from .llm.mock import HeuristicLLMClient

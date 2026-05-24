@@ -25,9 +25,18 @@ diff text ──▶ diff_parser ──▶ prompts ──▶ LLMClient ──▶ 
 # Run the test suite
 python -m pytest -q
 
-# Review a real diff offline with the heuristic backend
+# Review the bundled sample diff offline (no API key)
+python -m pr_review_agent.cli --mock examples/sample.diff
+
+# Review your working changes
 git diff | python -m pr_review_agent.cli --mock
+
+# Review a live GitHub PR by URL (uses GITHUB_TOKEN if set)
+python -m pr_review_agent.cli --github-pr https://github.com/OWNER/REPO/pull/N --mock
 ```
+
+See [docs/architecture.md](docs/architecture.md) for the design and
+[docs/demo-script.md](docs/demo-script.md) for the demo walkthrough.
 
 Example output:
 

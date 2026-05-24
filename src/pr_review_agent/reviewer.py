@@ -10,30 +10,67 @@ import json
 import re
 from collections import Counter
 
-from .diff_parser import parse_unified_diff
+from .diff_parser import FileDiff, parse_unified_diff
 from .llm.base import LLMClient
 from .models import Finding, ReviewResult, Severity
-from .prompts import SYSTEM_PROMPT, build_user_prompt
+from .prompts import SYSTEM_PROMPT, build_batch_prompt, build_user_prompt
 
 
 class PRReviewer:
-    def __init__(self, llm: LLMClient, max_files: int = 50):
+    """Review a diff with an LLM backend.
+
+    Args:
+        llm: any object implementing ``complete(system, user) -> str``.
+        max_files: cap on number of changed files reviewed.
+        batch_char_budget: if set, files are grouped into batched prompts up to
+            this many characters per call (fewer API calls). If ``None`` (default)
+            each file is reviewed in its own call for the tightest line mapping.
+    """
+
+    def __init__(self, llm: LLMClient, max_files: int = 50,
+                 batch_char_budget: int | None = None):
         self.llm = llm
         self.max_files = max_files
+        self.batch_char_budget = batch_char_budget
 
     def review_diff(self, diff_text: str) -> ReviewResult:
-        files = parse_unified_diff(diff_text)[: self.max_files]
+        files = [fd for fd in parse_unified_diff(diff_text)[: self.max_files]
+                 if fd.added_lines]
         result = ReviewResult()
-        for fd in files:
-            if not fd.added_lines:
-                continue
-            raw = self.llm.complete(SYSTEM_PROMPT, build_user_prompt(fd))
-            result.findings.extend(self._parse_findings(fd.path, raw))
+        if not files:
+            result.summary = self._summarize(result)
+            return result
+
+        if self.batch_char_budget:
+            for chunk in self._chunk(files, self.batch_char_budget):
+                raw = self.llm.complete(SYSTEM_PROMPT, build_batch_prompt(chunk))
+                result.findings.extend(self._parse_findings(chunk[0].path, raw))
+        else:
+            for fd in files:
+                raw = self.llm.complete(SYSTEM_PROMPT, build_user_prompt(fd))
+                result.findings.extend(self._parse_findings(fd.path, raw))
+
         result.summary = self._summarize(result)
         return result
 
     @staticmethod
-    def _parse_findings(path: str, raw: str) -> list[Finding]:
+    def _chunk(files: list[FileDiff], budget: int) -> list[list[FileDiff]]:
+        chunks: list[list[FileDiff]] = []
+        current: list[FileDiff] = []
+        size = 0
+        for fd in files:
+            approx = sum(len(ln.content) + 8 for ln in fd.lines) + len(fd.path)
+            if current and size + approx > budget:
+                chunks.append(current)
+                current, size = [], 0
+            current.append(fd)
+            size += approx
+        if current:
+            chunks.append(current)
+        return chunks
+
+    @staticmethod
+    def _parse_findings(default_path: str, raw: str) -> list[Finding]:
         data = _loads_lenient(raw)
         findings: list[Finding] = []
         for item in data.get("findings", []):
@@ -46,7 +83,7 @@ class PRReviewer:
             line = item.get("line")
             findings.append(
                 Finding(
-                    file=item.get("file") or path,
+                    file=item.get("file") or default_path,
                     severity=severity,
                     title=str(item.get("title", "")).strip(),
                     detail=str(item.get("detail", "")).strip(),

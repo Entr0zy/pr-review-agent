@@ -24,9 +24,12 @@ class MockLLMClient:
 
 # Simple pattern-based "reviewer" so `--mock` produces real output with no API key.
 _PATTERNS: list[tuple[re.Pattern, str, str, str]] = [
-    (re.compile(r"(?i)(password|secret|api[_-]?key|token)\s*=\s*['\"]"),
+    (re.compile(r"(?i)(password|passwd|secret|token|[a-z]*_?key)\s*=\s*['\"]"),
      "critical", "Possible hardcoded secret",
      "Move credentials to environment variables or a secret manager."),
+    (re.compile(r"(?i)(SELECT|INSERT|UPDATE|DELETE)\b.*['\"].*%"),
+     "high", "Possible SQL injection",
+     "Use parameterized queries instead of string formatting."),
     (re.compile(r"\beval\s*\("),
      "high", "Use of eval()",
      "eval() can execute arbitrary code; use a safe parser instead."),

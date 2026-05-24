@@ -7,6 +7,8 @@ from __future__ import annotations
 
 import os
 
+from ..prompts import RESPONSE_SCHEMA
+
 
 class GeminiClient:
     def __init__(self, model: str = "gemini-2.5-pro", api_key: str | None = None):
@@ -28,6 +30,7 @@ class GeminiClient:
             config={
                 "system_instruction": system,
                 "response_mime_type": "application/json",
+                "response_schema": RESPONSE_SCHEMA,
                 "temperature": 0.1,
             },
         )

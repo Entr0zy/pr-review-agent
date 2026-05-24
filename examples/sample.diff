@@ -1,0 +1,12 @@
+diff --git a/payment.py b/payment.py
+--- a/payment.py
++++ b/payment.py
+@@ -10,6 +10,11 @@ class PaymentProcessor:
+     def __init__(self, gateway):
+         self.gateway = gateway
+
++    STRIPE_KEY = "EXAMPLE_PLACEHOLDER_NOT_A_REAL_KEY"
++
++    def charge(self, amount, card):
++        query = "INSERT INTO charges VALUES ('%s')" % amount
++        return eval(self.gateway + ".charge")(amount, card)
