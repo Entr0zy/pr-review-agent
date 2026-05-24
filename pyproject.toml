@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pr-review-agent"
+version = "0.1.0"
+description = "An AI agent that reviews pull/merge-request diffs for bugs, security issues, and risks."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Entr0zy" }]
+keywords = ["code-review", "ai-agent", "gemini", "mcp", "pull-request"]
+dependencies = []
+
+[project.optional-dependencies]
+gemini = ["google-genai>=0.3.0"]
+dev = ["pytest>=7.4"]
+
+[project.scripts]
+pr-review-agent = "pr_review_agent.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
