@@ -71,12 +71,21 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--fail-on", dest="fail_on",
                         choices=[*_SEVERITY_ORDER, "none"], default="high",
                         help="Exit non-zero if a finding at/above this severity exists.")
+    parser.add_argument("--post", action="store_true",
+                        help="Post the review back to the PR/MR (GitLab MRs supported).")
     args = parser.parse_args(argv)
 
     llm = _make_llm(args)
     url = args.github_pr or args.gitlab_mr
     if url:
         result = review_url(url, llm)
+        if args.post:
+            from .agent import post_review_to_url
+            try:
+                note = post_review_to_url(url, result)
+                print(f"Posted review to {url} (note id: {note.get('id')})")
+            except NotImplementedError as exc:
+                print(f"--post skipped: {exc}")
     else:
         diff_text = open(args.diff, encoding="utf-8").read() if args.diff else sys.stdin.read()
         result = PRReviewer(llm).review_diff(diff_text)

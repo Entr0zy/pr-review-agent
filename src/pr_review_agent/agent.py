@@ -40,3 +40,24 @@ def review_url(
     """
     diff_text = (fetcher or _auto_fetch)(url, token)
     return PRReviewer(llm, batch_char_budget=batch_char_budget).review_diff(diff_text)
+
+
+def post_review_to_url(
+    url: str,
+    result: ReviewResult,
+    *,
+    token: str | None = None,
+    poster: Callable[[str, str, str | None], dict] | None = None,
+) -> dict:
+    """Render ``result`` as markdown and post it back to the PR/MR.
+
+    Currently implemented for GitLab merge requests. ``poster`` can be injected
+    for testing.
+    """
+    from .output import to_markdown
+
+    body = to_markdown(result)
+    if "/-/merge_requests/" in url:
+        from .sources.gitlab import post_mr_note_from_url
+        return (poster or post_mr_note_from_url)(url, body, token=token)
+    raise NotImplementedError("Posting is currently implemented for GitLab MRs.")

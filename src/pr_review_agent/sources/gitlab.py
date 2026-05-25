@@ -6,6 +6,7 @@ gitlab.com and self-hosted instances. Token via ``GITLAB_TOKEN`` or arg.
 """
 from __future__ import annotations
 
+import json
 import os
 import re
 import urllib.parse
@@ -43,3 +44,27 @@ def fetch_mr_diff(host: str, project_path: str, iid: int,
 
 def fetch_mr_diff_from_url(url: str, token: str | None = None) -> str:
     return fetch_mr_diff(*parse_mr_url(url), token=token)
+
+
+def _build_note_request(host: str, project_path: str, iid: int, body: str,
+                        token: str | None = None) -> urllib.request.Request:
+    encoded = urllib.parse.quote(project_path, safe="")
+    api = f"https://{host}/api/v4/projects/{encoded}/merge_requests/{iid}/notes"
+    data = json.dumps({"body": body}).encode()
+    headers = {"User-Agent": "pr-review-agent", "Content-Type": "application/json"}
+    token = token or os.environ.get("GITLAB_TOKEN")
+    if token:
+        headers["PRIVATE-TOKEN"] = token
+    return urllib.request.Request(api, data=data, headers=headers, method="POST")
+
+
+def post_mr_note(host: str, project_path: str, iid: int, body: str,
+                 token: str | None = None, timeout: int = 30) -> dict:
+    """Post a comment (note) to a merge request. Returns the created note JSON."""
+    request = _build_note_request(host, project_path, iid, body, token)
+    with urllib.request.urlopen(request, timeout=timeout) as response:  # noqa: S310
+        return json.loads(response.read().decode())
+
+
+def post_mr_note_from_url(url: str, body: str, token: str | None = None) -> dict:
+    return post_mr_note(*parse_mr_url(url), body=body, token=token)
