@@ -95,6 +95,19 @@ jobs:
           fail-on: high
 ```
 
+## Run as a Slack app
+
+```bash
+pip install -e ".[slack]"
+# from your Slack app config:
+export SLACK_BOT_TOKEN=... SLACK_SIGNING_SECRET=... SLACK_APP_TOKEN=...
+export GEMINI_API_KEY=...   # or: export PR_REVIEW_MODEL=gemini-2.5-flash
+python -m pr_review_agent.adapters.slack_app
+```
+
+In Slack, run `/review https://github.com/OWNER/REPO/pull/N` (or a GitLab MR URL).
+The agent fetches the diff, reviews it, and posts the findings to the channel.
+
 ## CLI options
 
 | Flag | Purpose |
@@ -103,13 +116,14 @@ jobs:
 | `--mock` | offline heuristic reviewer (no API key) |
 | `--format text\|json\|markdown` | output format |
 | `--fail-on critical\|high\|medium\|low\|info\|none` | exit-code threshold |
+| `--post` | comment the review back on the PR/MR (GitLab MRs) |
 
 ## Roadmap (adapters)
 
 | Adapter | Surface | Status |
 |---|---|---|
 | `agents/gitlab_reviewer`, `adapters/gitlab_mcp.py` | Google Cloud Agent Builder + Gemini 3 + GitLab MCP | implemented; deploy/auth required |
-| `adapters/slack_app.py` | Slack app (MCP integration) | stub |
+| `adapters/slack_app.py` | Slack app (`/review` slash command) | implemented; Slack workspace + tokens required |
 | `adapters/github_app.py` | GitHub App / Marketplace (PR webhooks) | core implemented (signature verify + payload parse) |
 | `sources/github.py`, `sources/gitlab.py` | fetch PR/MR diffs | implemented |
 

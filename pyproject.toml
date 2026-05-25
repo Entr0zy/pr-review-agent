@@ -16,6 +16,7 @@ dependencies = []
 [project.optional-dependencies]
 gemini = ["google-genai>=0.3.0"]
 cloud = ["google-adk[mcp]>=2.1.0"]
+slack = ["slack-bolt>=1.18"]
 dev = ["pytest>=7.4"]
 
 [project.scripts]
