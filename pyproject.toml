@@ -15,6 +15,7 @@ dependencies = []
 
 [project.optional-dependencies]
 gemini = ["google-genai>=0.3.0"]
+cloud = ["google-adk[mcp]>=2.1.0"]
 dev = ["pytest>=7.4"]
 
 [project.scripts]

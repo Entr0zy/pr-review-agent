@@ -63,6 +63,8 @@ sequenceDiagram
 | `llm/gemini` | Gemini backend with structured-output schema |
 | `llm/mock` | offline `MockLLMClient` (tests) + `HeuristicLLMClient` (demo) |
 | `sources/github` | fetch a PR diff via the GitHub REST API (stdlib) |
+| `adapters/gitlab_mcp` | ADK/Gemini 3 agent factory connected to official GitLab MCP over HTTP |
+| `agents/gitlab_reviewer` | deployable ADK `root_agent` entrypoint for Agent Builder |
 | `adapters/*` | per-platform glue (Google Cloud, Slack, GitHub App) |
 
 **Why this shape:** each hackathon mandates a different orchestration layer, so

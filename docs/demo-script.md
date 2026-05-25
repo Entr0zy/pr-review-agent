@@ -6,7 +6,8 @@ list + narration you can record once the cloud adapter is wired.
 ## Setup (before recording)
 - Terminal with the repo checked out, tests passing.
 - A browser tab on a real GitHub PR (or use `examples/sample.diff`).
-- (For the live agent) the deployed Google Cloud Agent Builder URL.
+- (For the live agent) the deployed Google Cloud Agent Builder URL and an
+  authorized GitLab MCP connection.
 
 ## Shot list
 
@@ -25,8 +26,9 @@ schema, and returns findings. Sources and platform adapters are pluggable."
   python -m pr_review_agent.cli --mock examples/sample.diff
   ```
   Point out it flags the hardcoded Stripe key, the SQL-injection string, and `eval()`.
-- Then the real agent (Google Cloud + Gemini + GitLab MCP): trigger a review on a
-  live merge request; show findings posted back as MR comments.
+- Then the real agent (Google Cloud + Gemini 3 + GitLab MCP): trigger a review on
+  a live merge request; show its proposed findings, approve the write action,
+  and show the findings posted back as MR comments.
 
 **1:50–2:30 — Under the hood.**
 "Findings are schema-constrained JSON mapped to exact file lines. The engine
@@ -47,4 +49,8 @@ python -m pr_review_agent.cli --mock examples/sample.diff
 
 # live GitHub PR (uses GITHUB_TOKEN if set)
 python -m pr_review_agent.cli --github-pr https://github.com/OWNER/REPO/pull/N --mock
+
+# local Google ADK UI for the GitLab MCP agent
+pip install -e ".[cloud]"
+adk web agents
 ```

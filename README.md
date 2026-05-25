@@ -52,9 +52,30 @@ Example output:
 
 ```bash
 pip install "pr-review-agent[gemini]"
-export GEMINI_API_KEY=...        # set the model id to Gemini 3 in llm/gemini.py
+export GEMINI_API_KEY=...
 git diff main...HEAD | python -m pr_review_agent.cli
 ```
+
+## Google Cloud Agent Builder + GitLab MCP
+
+The GitLab hackathon track has a deployable ADK agent in
+`agents/gitlab_reviewer/agent.py`. It runs on Gemini 3 and connects to GitLab's
+official HTTP MCP endpoint, so it can inspect merge requests and, after explicit
+approval, post review findings back to GitLab.
+
+```bash
+pip install -e ".[cloud]"
+export GOOGLE_API_KEY=...
+adk web agents
+```
+
+The default model is `gemini-3-pro-preview` and the default MCP endpoint is
+`https://gitlab.com/api/v4/mcp`. GitLab authentication occurs through its MCP
+OAuth flow; a hosted runtime can supply its resulting bearer token through
+`GITLAB_MCP_AUTH_TOKEN` from secret configuration.
+
+See [docs/google-cloud-gitlab.md](docs/google-cloud-gitlab.md) for configuration,
+cloud deployment, and demo steps.
 
 ## Use as a GitHub Action
 
@@ -87,7 +108,7 @@ jobs:
 
 | Adapter | Surface | Status |
 |---|---|---|
-| `adapters/gitlab_mcp.py` | Google Cloud Agent Builder + Gemini 3 + GitLab MCP | stub (needs cloud creds) |
+| `agents/gitlab_reviewer`, `adapters/gitlab_mcp.py` | Google Cloud Agent Builder + Gemini 3 + GitLab MCP | implemented; deploy/auth required |
 | `adapters/slack_app.py` | Slack app (MCP integration) | stub |
 | `adapters/github_app.py` | GitHub App / Marketplace (PR webhooks) | core implemented (signature verify + payload parse) |
 | `sources/github.py`, `sources/gitlab.py` | fetch PR/MR diffs | implemented |
