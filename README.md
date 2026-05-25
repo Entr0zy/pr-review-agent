@@ -56,13 +56,41 @@ export GEMINI_API_KEY=...        # set the model id to Gemini 3 in llm/gemini.py
 git diff main...HEAD | python -m pr_review_agent.cli
 ```
 
+## Use as a GitHub Action
+
+```yaml
+# .github/workflows/review.yml
+name: PR Review
+on: pull_request
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Entr0zy/pr-review-agent@main
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          gemini-api-key: ${{ secrets.GEMINI_API_KEY }}  # omit to run the offline heuristic
+          fail-on: high
+```
+
+## CLI options
+
+| Flag | Purpose |
+|---|---|
+| `--github-pr URL` / `--gitlab-mr URL` | review a live PR/MR (auto-fetches the diff) |
+| `--mock` | offline heuristic reviewer (no API key) |
+| `--format text\|json\|markdown` | output format |
+| `--fail-on critical\|high\|medium\|low\|info\|none` | exit-code threshold |
+
 ## Roadmap (adapters)
 
 | Adapter | Surface | Status |
 |---|---|---|
-| `adapters/gitlab_mcp.py` | Google Cloud Agent Builder + Gemini 3 + GitLab MCP | stub |
+| `adapters/gitlab_mcp.py` | Google Cloud Agent Builder + Gemini 3 + GitLab MCP | stub (needs cloud creds) |
 | `adapters/slack_app.py` | Slack app (MCP integration) | stub |
-| `adapters/github_app.py` | GitHub App / Marketplace (PR webhooks) | stub |
+| `adapters/github_app.py` | GitHub App / Marketplace (PR webhooks) | core implemented (signature verify + payload parse) |
+| `sources/github.py`, `sources/gitlab.py` | fetch PR/MR diffs | implemented |
 
 ## License
 

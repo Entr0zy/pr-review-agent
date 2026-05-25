@@ -1,0 +1,47 @@
+name: "PR Review Agent"
+description: "Review the pull request diff for bugs, security issues, and risks."
+branding:
+  icon: "check-circle"
+  color: "purple"
+
+inputs:
+  github-token:
+    description: "Token used to fetch the PR diff."
+    required: true
+    default: ${{ github.token }}
+  gemini-api-key:
+    description: "Gemini API key. If omitted, the offline heuristic reviewer is used."
+    required: false
+    default: ""
+  fail-on:
+    description: "Exit non-zero (fail the check) if a finding at/above this severity exists."
+    required: false
+    default: "high"
+  model:
+    description: "Gemini model id."
+    required: false
+    default: "gemini-2.5-pro"
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+    - name: Install pr-review-agent
+      shell: bash
+      run: pip install "${{ github.action_path }}"
+    - name: Review pull request
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        GEMINI_API_KEY: ${{ inputs.gemini-api-key }}
+      run: |
+        MOCK_FLAG=""
+        if [ -z "${{ inputs.gemini-api-key }}" ]; then MOCK_FLAG="--mock"; fi
+        python -m pr_review_agent.cli \
+          --github-pr "${{ github.event.pull_request.html_url }}" \
+          --model "${{ inputs.model }}" \
+          --fail-on "${{ inputs.fail-on }}" \
+          --format markdown \
+          $MOCK_FLAG
