@@ -16,7 +16,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install test deps
-        run: pip install pytest
+      - name: Install test and cloud adapter deps
+        run: pip install -e ".[dev,cloud]"
       - name: Run tests
         run: python -m pytest -q
+      - name: Construct Google ADK GitLab MCP agent
+        run: |
+          python -c "from agents.gitlab_reviewer.agent import root_agent; assert root_agent.model == 'gemini-3-pro-preview'; print(root_agent.name)"
