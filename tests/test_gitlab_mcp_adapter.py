@@ -27,7 +27,7 @@ def test_build_agent_uses_gitlab_mcp_and_gemini_3(monkeypatch):
     toolset = agent.kwargs["tools"][0]
     params = toolset.kwargs["connection_params"]
 
-    assert agent.kwargs["model"] == "gemini-3-pro-preview"
+    assert agent.kwargs["model"] == "gemini-3.1-pro-preview"
     assert params.kwargs["url"] == "https://gitlab.com/api/v4/mcp"
     assert params.kwargs["headers"] == {
         "X-Gitlab-Mcp-Server-Tool-Name-Prefix": "gitlab_"

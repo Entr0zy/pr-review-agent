@@ -9,7 +9,7 @@ from __future__ import annotations
 import os
 from typing import Any
 
-DEFAULT_MODEL = "gemini-3-pro-preview"
+DEFAULT_MODEL = "gemini-3.1-pro-preview"
 DEFAULT_GITLAB_MCP_URL = "https://gitlab.com/api/v4/mcp"
 DEFAULT_TOOL_PREFIX = "gitlab_"
 

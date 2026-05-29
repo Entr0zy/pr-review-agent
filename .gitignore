@@ -16,7 +16,14 @@ env/
 
 # Secrets / local config
 .env
+.env.*
+.env.bak*
 *.local
+gcp-vertex-key.json
+
+# ADK / agent runtime state
+.adk/
+**/.adk/
 
 # Editors / OS
 .vscode/
